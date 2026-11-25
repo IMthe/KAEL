@@ -1,17 +1,15 @@
 # KAEL — Knowledge-Action Exploratory Learning
 
-Code for *Extending the Limits of Li-Ion Conductivity in Halide Solid-State Electrolytes via Knowledge-Action Exploratory Learning*.
-
 KAEL couples a knowledge-discovery agent, which turns literature data into an interpretable conductivity expression, with an action agent, which selects experiments in the candidate composition space and feeds the measurements back into the expression.
 
 ## Workflow
 
-| Step | Module | Paper |
-|---|---|---|
-| Random-forest ranking of stacking type, cationic potential, electronegativity and Li-vacancy content | `kael/ranking.py` | Fig. 2d |
-| LLM-guided symbolic regression: the LLM proposes phase-specific expressions, multistart least squares fits every coefficient, and the Pareto front of error and complexity is resolved by BIC | `kael/knowledge.py` | Fig. 2b,c |
-| Fitting of the selected expressions to literature and experimental data, leave-one-out validation, BIC and the conductivity maximum | `kael/fitting.py`, `kael/report.py` | Fig. 2e,f; Fig. 3 |
-| Gaussian-process Bayesian optimisation with the symbolic model as prior mean and expected improvement as acquisition | `kael/action.py` | Fig. 3g |
+| Step | Module |
+|---|---|
+| Random-forest ranking of stacking type, cationic potential, electronegativity and Li-vacancy content | `kael/ranking.py` |
+| LLM-guided symbolic regression: the LLM proposes phase-specific expressions, multistart least squares fits every coefficient, and the Pareto front of error and complexity is resolved by BIC | `kael/knowledge.py` |
+| Fitting of the selected expressions to literature and experimental data, leave-one-out validation, BIC and the conductivity maximum | `kael/fitting.py`, `kael/report.py` |
+| Gaussian-process Bayesian optimisation with the symbolic model as prior mean and expected improvement as acquisition | `kael/action.py` |
 
 All coefficients of the conductivity expressions, including the peak position in cationic potential and Li-vacancy content and the peak height, are free parameters of the least-squares fit; only the decay rates of the exponential terms are non-negative. The conductivity maximum is the peak of the fitted ccp expression.
 
@@ -31,7 +29,7 @@ pip install -r requirements.txt
 python -m kael demo --out demo_results
 ```
 
-The demo writes a synthetic literature table (40 records) and a synthetic experiment table (4 records) generated from a known conductivity surface, then runs the full workflow. It finishes in under a minute on a laptop and recovers the peak of the generating surface. The summary is printed to the console and saved in `demo_results/demo.json`, together with `fig2d_descriptor_ranking.png`, `fig3_parity.png` and `fig3_surface.png`.
+The demo writes a synthetic literature table (40 records) and a synthetic experiment table (4 records) generated from a known conductivity surface, then runs the full workflow. It finishes in under a minute on a laptop and recovers the peak of the generating surface. The summary is printed to the console and saved in `demo_results/demo.json`, together with descriptor-ranking, parity and conductivity-surface plots.
 
 ## Usage
 
