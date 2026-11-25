@@ -35,12 +35,12 @@ class KAELTests(unittest.TestCase):
     def test_free_fit_recovers_peak(self):
         rng = np.random.default_rng(1)
         rows = [dict(id=str(i), stacking="ccp", phi=p, nv=v, chi=2.3,
-                     sigma=1 + 2.5 * np.exp(-40 * abs(p - 1.765) - 3 * abs(v - 0.2)) + rng.normal(0, 0.01))
+                     sigma=1 + 2.5 * np.exp(-40 * abs(p - 1.780) - 3 * abs(v - 0.12)) + rng.normal(0, 0.01))
                 for i, (p, v) in enumerate(zip(rng.uniform(1.74, 1.80, 40), rng.uniform(0, 0.4, 40)))]
         source, roles = forms.CCP_PHI_NV
         fit = fitting.fit(source, rows, roles, starts=24)
-        self.assertAlmostEqual(fit["params"][3], 1.765, places=2)
-        self.assertAlmostEqual(fit["params"][5], 0.2, places=1)
+        self.assertAlmostEqual(fit["params"][3], 1.780, places=2)
+        self.assertAlmostEqual(fit["params"][5], 0.12, places=1)
 
     def test_ranking_and_recommendation(self):
         self.assertEqual(set(ranking.rank(self.lit)["importance"]), {"stacking", "phi", "chi", "nv"})
