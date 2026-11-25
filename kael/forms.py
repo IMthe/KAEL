@@ -14,10 +14,13 @@ HCP_PHI_NV_CHI = ("p0*exp(-p1*abs(phi-p2)-p3*abs(nv-p4)+p5*chi)",
 CCP_PHI_NV_CHI = ("p0+p1*exp(-p2*abs(phi-p3)-p4*abs(nv-p5)+p6*chi)",
                   ["offset", "amplitude", "rate:phi", "center:phi", "rate:nv", "center:nv", "coefficient"])
 
-# Literature model
-LITERATURE = {"hcp": HCP_PHI_NV, "ccp": CCP_PHI_NV}
+CCP_PHI_NV_GAUSS = ("(p0+p1*exp(-p2*abs(phi-p3)))*exp(-p4*(nv-p5)**2)",
+                    ["offset", "amplitude", "rate:phi", "center:phi", "rate:nv", "center:nv"])
 
-# Small-model descriptor tests
+# Literature model proposed by the LLM
+LITERATURE = {"hcp": HCP_PHI_NV, "ccp": CCP_PHI_NV_GAUSS}
+
+# Small-model descriptor tests; the final model is panel e.
 PANELS = {
     "a": ("literature", "vacancy_free", {"hcp": HCP_PHI, "ccp": CCP_PHI}),
     "b": ("literature", "all", {"hcp": HCP_PHI_NV, "ccp": CCP_PHI_NV}),

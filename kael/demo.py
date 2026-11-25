@@ -11,13 +11,13 @@ EXP_FIELDS = ["id", "iteration", "formula", "stacking", "c", "nv", "phi", "chi",
 
 def surface(phi, nv, stacking):
     if stacking == "ccp":
-        return 1.1 + 2.4 * np.exp(-45 * abs(phi - 1.765) - 2.5 * abs(nv - 0.2))
-    return 0.5 * np.exp(-20 * abs(phi - 1.76) - 3 * abs(nv - 0.25))
+        return 1.0 + 2.2 * np.exp(-45 * abs(phi - 1.778) - 2.5 * abs(nv - 0.12))
+    return 0.5 * np.exp(-20 * abs(phi - 1.765) - 3 * abs(nv - 0.25))
 
 
 def record(ident, c, er, rng, noise=0.05):
     d = descriptors(c, er)
-    stacking = "ccp" if d["phi"] > 1.755 else "hcp"
+    stacking = "ccp" if d["phi"] > 1.765 else "hcp"
     sigma = max(0.01, surface(d["phi"], d["nv"], stacking) * (1 + rng.normal(0, noise)))
     return dict(id=ident, formula=d["formula"], stacking=stacking, c=c, nv=round(3 - c, 4), delta_li=round(3 - c, 4),
                 phi=round(d["phi"], 5), chi=round(d["chi"], 5), cation_radius=round(0.94 + 0.09 * er, 4),

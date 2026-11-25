@@ -1,6 +1,6 @@
 """Multistart least-squares fitting of phase-specific expressions and model statistics."""
 import numpy as np
-from scipy.optimize import least_squares
+from scipy.optimize import minimize
 
 from .expressions import Expression
 
@@ -10,7 +10,7 @@ def table(rows, keys=("phi", "nv", "chi")):
 
 
 def random_start(roles, rows, rng):
-    """Draw one starting point from broad, data-scaled distributions (no bounds are imposed in the fit)."""
+    """Draw one starting point for the optimiser from broad, data-scaled distributions."""
     y = np.array([r["sigma"] for r in rows])
     x = []
     for role in roles:
@@ -30,14 +30,14 @@ def random_start(roles, rows, rng):
 
 
 def fit(source, rows, roles=None, initial=None, starts=64, seed=0):
-    """Minimise the sum of squared conductivity residuals from many starting points."""
+    """Minimise the mean squared error with multistart L-BFGS-B."""
     expr = Expression(source)
     data, y = table(rows), np.array([r["sigma"] for r in rows], float)
     rng = np.random.default_rng(seed)
 
-    def residual(p):
-        r = expr(p, data) - y
-        return np.where(np.isfinite(r), r, 1e6)
+    def mse(p):
+        value = np.mean((expr(p, data) - y) ** 2)
+        return float(value) if np.isfinite(value) else 1e12
 
     guesses = []
     if initial is not None:
@@ -47,18 +47,13 @@ def fit(source, rows, roles=None, initial=None, starts=64, seed=0):
     while len(guesses) < starts:
         guesses.append(random_start(roles, rows, rng) if roles else rng.normal(0, 3, expr.n_params))
     # Decay rates of exp(-k|x - x0|) terms are non-negative; all other coefficients are unbounded.
-    lower = np.array([0.0 if (roles and roles[i].startswith("rate")) else -np.inf for i in range(expr.n_params)])
+    bounds = [(0.0, None) if (roles and roles[i].startswith("rate")) else (None, None) for i in range(expr.n_params)]
     best = None
     for g in guesses:
-        g = np.maximum(g, np.where(np.isfinite(lower), lower + 1e-6, -np.inf))
-        try:
-            sol = least_squares(residual, g, method="trf", bounds=(lower, np.inf), max_nfev=4000)
-        except (ValueError, FloatingPointError):
-            continue
-        if np.all(np.isfinite(sol.x)) and (best is None or sol.cost < best.cost):
+        g = np.array([max(v, 1e-6) if b[0] == 0.0 else v for v, b in zip(g, bounds)])
+        sol = minimize(mse, g, method="L-BFGS-B", bounds=bounds, options=dict(maxiter=5000, maxfun=20000))
+        if np.all(np.isfinite(sol.x)) and (best is None or sol.fun < best.fun):
             best = sol
-    if best is None:
-        raise ValueError("No converged fit")
     pred = expr(best.x, data)
     return dict(expression=source, params=best.x.tolist(), n=len(rows), nodes=expr.nodes,
                 mse=float(np.mean((pred - y) ** 2)), predictions=pred.tolist())
